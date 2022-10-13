@@ -10,6 +10,7 @@
  **Read the docs [here](https://adiwajshing.github.io/Baileys)**
  **Join the Discord [here](https://discord.gg/WeJM5FP9GG)**
 
+[<img src="https://img.shields.io/npm/v/baileys?style=plastic">](www.amiruldev.my.id)
 
 ## Example
 
