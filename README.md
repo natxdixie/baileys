@@ -10,7 +10,7 @@
  **Read the docs [here](https://adiwajshing.github.io/Baileys)**
  **Join the Discord [here](https://discord.gg/WeJM5FP9GG)**
 
-[<img src="https://img.shields.io/npm/v/baileys?style=plastic">](https://npmjs.com/package/baileys), jika ingin menggunakan single auth bisa memakai npm [<img src="https://img.shields.io/badge/versi%204.5.8-blue.svg">]
+[<img src="https://img.shields.io/npm/v/baileys?style=plastic">](https://npmjs.com/package/baileys), jika ingin menggunakan single auth bisa memakai npm  [<img src="https://img.shields.io/badge/versi-4.5.8-blue.svg">](https://npmjs.com/package/baileys/v)
 
 ## Example
 
