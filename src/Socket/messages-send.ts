@@ -647,7 +647,7 @@ upsertMessage(fullMsg, 'append')
 
 return fullMsg
 }
-},
+}
 // end function
 }
 }
