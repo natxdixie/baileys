@@ -648,17 +648,6 @@ upsertMessage(fullMsg, 'append')
 return fullMsg
 }
 },
-
-sendText: async(
-	jid: string,
-	content: AnyMessageContent,
-	options: MiscMessageGenerationOptions = { }
-	) => {
-sendMessage(jid, {
-	text: content
-}, options)
-	}
-	
 // end function
 }
 }
