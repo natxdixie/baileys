@@ -8,12 +8,12 @@ const addPrefix = (lines, prefix) => lines.map(line => prefix + line)
 const extractAllExpressions = (node) => {
 	const expressions = [node]
 	const exp = node.expression
-	if(exp) {
+	if (exp) {
 		expressions.push(exp)
 	}
 
-	if(node.expression?.expressions?.length) {
-		for(const exp of node.expression?.expressions) {
+	if (node.expression?.expressions?.length) {
+		for (const exp of node.expression?.expressions) {
 			expressions.push(...extractAllExpressions(exp))
 		}
 	}
@@ -54,7 +54,7 @@ async function findAppModules() {
 			const expressions = extractAllExpressions(b)
 			return expressions?.find(e => e?.left?.property?.name === 'internalSpec')
 		})
-		if(hasProto) {
+		if (hasProto) {
 			return true
 		}
 	})
@@ -62,7 +62,7 @@ async function findAppModules() {
 	return result
 }
 
-(async() => {
+(async () => {
 	const unspecName = name => name.endsWith('Spec') ? name.slice(0, -4) : name
 	const unnestName = name => name.split('$').slice(-1)[0]
 	const getNesting = name => name.split('$').slice(0, -1).join('$')
@@ -92,7 +92,7 @@ async function findAppModules() {
 		modulesInfo[key.value] = { crossRefs: [] }
 		walk.simple(value, {
 			VariableDeclarator(node) {
-				if(node.init && node.init.type === 'CallExpression' && node.init.callee.name === requiringParam && node.init.arguments.length === 1) {
+				if (node.init && node.init.type === 'CallExpression' && node.init.callee.name === requiringParam && node.init.arguments.length === 1) {
 					modulesInfo[key.value].crossRefs.push({ alias: node.id.name, module: node.init.arguments[0].value })
 				}
 			}
@@ -100,18 +100,18 @@ async function findAppModules() {
 	})
 
 	// find all identifiers and, for enums, their array of values
-	for(const mod of modules) {
+	for (const mod of modules) {
 		const modInfo = modulesInfo[mod.key.value]
 		const rename = makeRenameFunc(mod.key.value)
 
 		// all identifiers will be initialized to "void 0" (i.e. "undefined") at the start, so capture them here
 		walk.ancestor(mod, {
 			UnaryExpression(node, anc) {
-				if(!modInfo.identifiers && node.operator === 'void') {
+				if (!modInfo.identifiers && node.operator === 'void') {
 					const assignments = []
 					let i = 1
 					anc.reverse()
-					while(anc[i].type === 'AssignmentExpression') {
+					while (anc[i].type === 'AssignmentExpression') {
 						assignments.push(anc[i++].left)
 					}
 
@@ -120,11 +120,11 @@ async function findAppModules() {
 						const indentation = getNesting(key)
 						const value = { name: key }
 
-						moduleIndentationMap[key] = moduleIndentationMap[key] || { }
+						moduleIndentationMap[key] = moduleIndentationMap[key] || {}
 						moduleIndentationMap[key].indentation = indentation
 
-						if(indentation.length) {
-							moduleIndentationMap[indentation] = moduleIndentationMap[indentation] || { }
+						if (indentation.length) {
+							moduleIndentationMap[indentation] = moduleIndentationMap[indentation] || {}
 							moduleIndentationMap[indentation].members = moduleIndentationMap[indentation].members || new Set()
 							moduleIndentationMap[indentation].members.add(key)
 						}
@@ -141,12 +141,12 @@ async function findAppModules() {
 		// enums are defined directly, and both enums and messages get a one-letter alias
 		walk.simple(mod, {
 			VariableDeclarator(node) {
-				if(
+				if (
 					node.init?.type === 'CallExpression'
-                    // && enumConstructorIDs.includes(node.init.callee?.arguments?.[0]?.value)
-                    && !!node.init.arguments.length
-                    && node.init.arguments[0].type === 'ObjectExpression'
-                    && node.init.arguments[0].properties.length
+					// && enumConstructorIDs.includes(node.init.callee?.arguments?.[0]?.value)
+					&& !!node.init.arguments.length
+					&& node.init.arguments[0].type === 'ObjectExpression'
+					&& node.init.arguments[0].properties.length
 				) {
 					const values = node.init.arguments[0].properties.map(p => ({
 						name: p.key.name,
@@ -156,7 +156,7 @@ async function findAppModules() {
 				}
 			},
 			AssignmentExpression(node) {
-				if(node.left.type === 'MemberExpression' && modInfo.identifiers[rename(node.left.property.name)]) {
+				if (node.left.type === 'MemberExpression' && modInfo.identifiers[rename(node.left.property.name)]) {
 					const ident = modInfo.identifiers[rename(node.left.property.name)]
 					ident.alias = node.right.name
 					// enumAliases[ident.alias] = enumAliases[ident.alias] || []
@@ -167,16 +167,16 @@ async function findAppModules() {
 	}
 
 	// find the contents for all protobuf messages
-	for(const mod of modules) {
+	for (const mod of modules) {
 		const modInfo = modulesInfo[mod.key.value]
 		const rename = makeRenameFunc(mod.key.value)
 
 		// message specifications are stored in a "internalSpec" attribute of the respective identifier alias
 		walk.simple(mod, {
 			AssignmentExpression(node) {
-				if(node.left.type === 'MemberExpression' && node.left.property.name === 'internalSpec' && node.right.type === 'ObjectExpression') {
+				if (node.left.type === 'MemberExpression' && node.left.property.name === 'internalSpec' && node.right.type === 'ObjectExpression') {
 					const targetIdent = Object.values(modInfo.identifiers).find(v => v.alias === node.left.object.name)
-					if(!targetIdent) {
+					if (!targetIdent) {
 						console.warn(`found message specification for unknown identifier alias: ${node.left.object.name}`)
 						return
 					}
@@ -184,7 +184,7 @@ async function findAppModules() {
 					// partition spec properties by normal members and constraints (like "__oneofs__") which will be processed afterwards
 					const constraints = []
 					let members = []
-					for(const p of node.right.properties) {
+					for (const p of node.right.properties) {
 						p.key.name = p.key.type === 'Identifier' ? p.key.name : p.key.value
 						const arr = p.key.name.substr(0, 2) === '__' ? constraints : members
 						arr.push(p)
@@ -197,26 +197,26 @@ async function findAppModules() {
 
 						// find type and flags
 						unwrapBinaryOr(elements[1]).forEach(m => {
-							if(m.type === 'MemberExpression' && m.object.type === 'MemberExpression') {
-								if(m.object.property.name === 'TYPES') {
+							if (m.type === 'MemberExpression' && m.object.type === 'MemberExpression') {
+								if (m.object.property.name === 'TYPES') {
 									type = m.property.name.toLowerCase()
-								} else if(m.object.property.name === 'FLAGS') {
+								} else if (m.object.property.name === 'FLAGS') {
 									flags.push(m.property.name.toLowerCase())
 								}
 							}
 						})
 
 						// determine cross reference name from alias if this member has type "message" or "enum"
-						if(type === 'message' || type === 'enum') {
+						if (type === 'message' || type === 'enum') {
 							const currLoc = ` from member '${name}' of message '${targetIdent.name}'`
-							if(elements[2].type === 'Identifier') {
+							if (elements[2].type === 'Identifier') {
 								type = Object.values(modInfo.identifiers).find(v => v.alias === elements[2].name)?.name
-								if(!type) {
+								if (!type) {
 									console.warn(`unable to find reference of alias '${elements[2].name}'` + currLoc)
 								}
-							} else if(elements[2].type === 'MemberExpression') {
+							} else if (elements[2].type === 'MemberExpression') {
 								const crossRef = modInfo.crossRefs.find(r => r.alias === elements[2].object.name)
-								if(crossRef && modulesInfo[crossRef.module].identifiers[rename(elements[2].property.name)]) {
+								if (crossRef && modulesInfo[crossRef.module].identifiers[rename(elements[2].property.name)]) {
 									type = rename(elements[2].property.name)
 								} else {
 									console.warn(`unable to find reference of alias to other module '${elements[2].object.name}' or to message ${elements[2].property.name} of this module` + currLoc)
@@ -229,7 +229,7 @@ async function findAppModules() {
 
 					// resolve constraints for members
 					constraints.forEach(c => {
-						if(c.key.name === '__oneofs__' && c.value.type === 'ObjectExpression') {
+						if (c.key.name === '__oneofs__' && c.value.type === 'ObjectExpression') {
 							const newOneOfs = c.value.properties.map(p => ({
 								name: p.key.name,
 								type: '__oneof__',
@@ -250,9 +250,9 @@ async function findAppModules() {
 		})
 	}
 
-	const decodedProtoMap = { }
+	const decodedProtoMap = {}
 	const spaceIndent = ' '.repeat(4)
-	for(const mod of modules) {
+	for (const mod of modules) {
 		const modInfo = modulesInfo[mod.key.value]
 		const identifiers = Object.values(modInfo.identifiers)
 
@@ -265,27 +265,27 @@ async function findAppModules() {
 
 		// message specification member stringifying function
 		const stringifyMessageSpecMember = (info, completeFlags, parentName = undefined) => {
-			if(info.type === '__oneof__') {
+			if (info.type === '__oneof__') {
 				return [].concat(
 					[`oneof ${info.name} {`],
 					addPrefix([].concat(...info.members.map(m => stringifyMessageSpecMember(m, false))), spaceIndent),
 					['}']
 				)
 			} else {
-				if(info.flags.includes('packed')) {
+				if (info.flags.includes('packed')) {
 					info.flags.splice(info.flags.indexOf('packed'))
 					info.packed = ' [packed=true]'
 				}
 
-				if(completeFlags && info.flags.length === 0) {
+				if (completeFlags && info.flags.length === 0) {
 					info.flags.push('optional')
 				}
 
 				const ret = []
 				const indentation = moduleIndentationMap[info.type]?.indentation
 				let typeName = unnestName(info.type)
-				if(indentation !== parentName && indentation) {
-					typeName = `${indentation.replaceAll('$', '.')}.${typeName}`
+				if (indentation !== parentName && indentation) {
+					typeName = `${indentation.replace(/\$/g, '.')}.${typeName}`
 				}
 
 				// if(info.enumValues) {
@@ -307,11 +307,11 @@ async function findAppModules() {
 				...addPrefix([].concat(...ident.members.map(m => stringifyMessageSpecMember(m, true, ident.name))), spaceIndent),
 			)
 
-			if(members?.size) {
+			if (members?.size) {
 				const sortedMembers = Array.from(members).sort()
-				for(const memberName of sortedMembers) {
+				for (const memberName of sortedMembers) {
 					let entity = modInfo.identifiers[memberName]
-					if(entity) {
+					if (entity) {
 						const displayName = entity.name.slice(ident.name.length + 1)
 						entity = { ...entity, displayName }
 						result.push(...addPrefix(getEntity(entity), spaceIndent))
@@ -329,9 +329,9 @@ async function findAppModules() {
 
 		const getEntity = (v) => {
 			let result
-			if(v.members) {
+			if (v.members) {
 				result = stringifyMessageSpec(v)
-			} else if(v.enumValues?.length) {
+			} else if (v.enumValues?.length) {
 				result = stringifyEnum(v)
 			} else {
 				result = ['// Unknown entity ' + v.name]
@@ -347,9 +347,9 @@ async function findAppModules() {
 			}
 		}
 
-		for(const value of identifiers) {
+		for (const value of identifiers) {
 			const { name, content } = stringifyEntity(value)
-			if(!moduleIndentationMap[name]?.indentation?.length) {
+			if (!moduleIndentationMap[name]?.indentation?.length) {
 				decodedProtoMap[name] = content
 			}
 			// decodedProtoMap[name] = content

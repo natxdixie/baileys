@@ -55,7 +55,7 @@ type ViewOnce = {
     viewOnce?: boolean
 }
 type Buttonable = {
-    /** add buttons to the message  */
+    /** add buttons to the message*/
     buttons?: proto.Message.ButtonsMessage.IButton[]
 }
 type Templatable = {
@@ -119,13 +119,21 @@ export type WASendableProduct = Omit<proto.Message.ProductMessage.IProductSnapsh
     productImage: WAMediaUpload
 }
 
+//-- add poll msg
+export type AnyPollMessageContent = {
+    pollName: string;
+    pollSelectable?: number;
+    pollValues: Array<string>;
+} & Mentionable & Buttonable & Templatable;
+
+
 export type AnyRegularMessageContent = (
     ({
-	    text: string
+        text: string
         linkPreview?: WAUrlInfo | null
     }
-    & Mentionable & Buttonable & Templatable & Listable)
-    | AnyMediaMessageContent
+        & Mentionable & Buttonable & Templatable & Listable)
+    | AnyMediaMessageContent | AnyPollMessageContent
     | {
         contacts: {
             displayName?: string
@@ -151,13 +159,13 @@ export type AnyRegularMessageContent = (
 export type AnyMessageContent = AnyRegularMessageContent & {
     contextInfo?: WAContextInfo
 } | {
-	forward: WAMessage
-	force?: boolean
+    forward: WAMessage
+    force?: boolean
 } | {
     /** Delete your message or anyone's message in a group (admin required) */
-	delete: WAMessageKey
+    delete: WAMessageKey
 } | {
-	disappearingMessagesInChat: boolean | number
+    disappearingMessagesInChat: boolean | number
 }
 
 export type GroupMetadataParticipants = Pick<GroupMetadata, 'participants'>
@@ -180,22 +188,22 @@ export type MessageRelayOptions = MinimalRelayOptions & {
 
 export type MiscMessageGenerationOptions = MinimalRelayOptions & {
     /** optional, if you want to manually set the timestamp of the message */
-	timestamp?: Date
+    timestamp?: Date
     /** the message you want to quote */
-	quoted?: WAMessage
+    quoted?: WAMessage
     /** disappearing messages settings */
     ephemeralExpiration?: number | string
     /** timeout for media upload to WA server */
     mediaUploadTimeoutMs?: number
 }
 export type MessageGenerationOptionsFromContent = MiscMessageGenerationOptions & {
-	userJid: string
+    userJid: string
 }
 
 export type WAMediaUploadFunction = (readStream: Readable, opts: { fileEncSha256B64: string, mediaType: MediaType, timeoutMs?: number }) => Promise<{ mediaUrl: string, directPath: string }>
 
 export type MediaGenerationOptions = {
-	logger?: Logger
+    logger?: Logger
     mediaTypeOverride?: MediaType
     upload: WAMediaUploadFunction
     /** cache media so it does not have to be uploaded again */
@@ -204,7 +212,7 @@ export type MediaGenerationOptions = {
     mediaUploadTimeoutMs?: number
 }
 export type MessageContentGenerationOptions = MediaGenerationOptions & {
-	getUrlInfo?: (text: string) => Promise<WAUrlInfo | undefined>
+    getUrlInfo?: (text: string) => Promise<WAUrlInfo | undefined>
 }
 export type MessageGenerationOptions = MessageContentGenerationOptions & MessageGenerationOptionsFromContent
 
