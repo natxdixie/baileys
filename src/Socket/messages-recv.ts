@@ -619,14 +619,16 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 
 	/// processes a node with the given function
 	/// and adds the task to the existing buffer if we're buffering events
-	const processNodeWithBuffer = (
+	const flushBufferIfLastOfflineNode = (
 		node: BinaryNode,
 		identifier: string,
 		exec: (node: BinaryNode) => Promise<any>
 	) => {
 		const task = exec(node)
 			.catch(err => onUnexpectedError(err, identifier))
-		ev.processInBuffer(task)
+		const offline = node.attrs.offline
+		if(offline) {
+			ev.processInBuffer(task)
 	}
 
 	// called when all offline notifs are handled
@@ -642,19 +644,19 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 
 	// recv a message
 	ws.on('CB:message', (node: BinaryNode) => {
-		processNodeWithBuffer(node, 'processing message', handleMessage)
+		flushBufferIfLastOfflineNode(node, 'processing message', handleMessage)
 	})
 
 	ws.on('CB:call', async(node: BinaryNode) => {
-		processNodeWithBuffer(node, 'handling call', handleCall)
+		flushBufferIfLastOfflineNode(node, 'handling call', handleCall)
 	})
 
 	ws.on('CB:receipt', node => {
-		processNodeWithBuffer(node, 'handling receipt', handleReceipt)
+		flushBufferIfLastOfflineNode(node, 'handling receipt', handleReceipt)
 	})
 
 	ws.on('CB:notification', async(node: BinaryNode) => {
-		processNodeWithBuffer(node, 'handling notification', handleNotification)
+		flushBufferIfLastOfflineNode(node, 'handling notification', handleNotification)
 	})
 
 	ws.on('CB:ack,class:message', (node: BinaryNode) => {
